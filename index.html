@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Smart Map App</title>
+<style>
+  :root { --green:#34A853; --blue:#4285F4; --purple:#673AB7; --grey:#f1f3f4; }
+  body  {font-family:system-ui,sans-serif;background:var(--grey);
+         display:flex;justify-content:center;padding:40px;}
+  #card {background:#fff;padding:30px 35px;border-radius:18px;
+         box-shadow:0 12px 26px rgba(0,0,0,.1);max-width:700px;width:100%;}
+  h1   {margin-top:0;}
+  label{display:block;margin:18px 0 6px;font-weight:600;}
+  input{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;}
+  button{margin:8px 5px 0 0;padding:11px 20px;border:none;border-radius:8px;
+         color:#fff;font-size:15px;cursor:pointer;transition:.2s;}
+  .loc-btn   {background:var(--blue);}
+  .route-btn {background:var(--green);}
+  .search-btn{background:var(--purple);}
+  button:hover{filter:brightness(.92);}
+  #info{margin-top:12px;font-weight:500;}
+  iframe{margin-top:20px;width:100%;height:350px;border:3px solid #ccc;
+         border-radius:12px;}
+</style>
+</head>
+<body>
+<div id="card">
+  <h1>🌍 Smart Map App</h1>
+
+  
+  <button class="loc-btn" onclick="showMyLocation()">📍 My Location</button>
+
+
+  <label for="dest">Destination:</label>
+  <input id="dest" placeholder="e.g. India Gate Delhi" />
+  <button class="route-btn" onclick="showRoute()">🧭 Show Route</button>
+
+
+  <label for="search">Search Nearby (ATM, cafe, gym…):</label>
+  <input id="search" />
+  <button class="search-btn" onclick="searchNearby()">🔍 Search Nearby</button>
+
+  <p id="info"></p>
+  <iframe id="map" loading="lazy"></iframe>
+</div>
+
+<script>
+let lat = null, lon = null;
+
+function getLocation(done) {
+  if (lat && lon) { done(); return; }
+
+  if (!navigator.geolocation) {
+    alert("Your browser doesn’t support geolocation.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    p => { lat = p.coords.latitude.toFixed(6); lon = p.coords.longitude.toFixed(6);
+           document.getElementById('info').textContent =
+             `Latitude: ${lat}, Longitude: ${lon}`;
+           done(); },
+    e => alert('Location error: ' + e.message),
+    { enableHighAccuracy:true }
+  );
+}
+
+
+function showMyLocation() {
+  getLocation(() => {
+    document.getElementById('map').src =
+      `https://maps.google.com/maps?q=${lat},${lon}&z=15&output=embed`;
+  });
+}
+
+
+function showRoute() {
+  const dest = document.getElementById('dest').value.trim();
+  if (!dest) { alert('Enter a destination.'); return; }
+
+  getLocation(() => {
+    const gmaps =
+      `https://www.google.com/maps/dir/?api=1&origin=${lat},${lon}`
+      + `&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+
+  
+    window.open(gmaps, '_blank');
+
+  
+    document.getElementById('map').src =
+      `https://maps.google.com/maps?q=${encodeURIComponent(dest)}&output=embed`;
+  });
+}
+
+
+function searchNearby() {
+  const what = document.getElementById('search').value.trim();
+  if (!what) { alert('Type something to search nearby.'); return; }
+
+  getLocation(() => {
+    const query  = encodeURIComponent(what);
+    const gmaps  = `https://www.google.com/maps/search/${query}/@${lat},${lon},15z`;
+
+    window.open(gmaps, '_blank');
+
+  
+    document.getElementById('map').src =
+      `https://maps.google.com/maps?q=${query}+near+${lat},${lon}&output=embed`;
+  });
+}
+</script>
+</body>
+</html>
